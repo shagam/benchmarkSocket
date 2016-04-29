@@ -1,4 +1,4 @@
-# benchmarkSocket_
+# benchmarkSocket
 Speed benchmark of sockets communication between java and c
 
 
