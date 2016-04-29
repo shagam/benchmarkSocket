@@ -26,7 +26,6 @@ public class BenchmarkSocket implements Runnable {
     static boolean s_help;
     static int s_portNum;
     int m_portNum; 
-    static int s_processNum;
     
     static Thread [] s_thread;
     static long s_startTimeMili = System.currentTimeMillis();
@@ -46,10 +45,7 @@ public class BenchmarkSocket implements Runnable {
      */
     public static void main(String[] args) {
         // TODO code application logic here
-    
-        // get args
-        s_processNum = Args.getInteger ("process", args, "ip port wrap (for process communication)");
-        
+            
         s_threadCnt = Args.getInteger("threads", args, "number of concurrent threads");
         if (s_threadCnt == Integer.MAX_VALUE)
             s_threadCnt = 16; // Runtime.getRuntime().availableProcessors();
@@ -78,29 +74,18 @@ public class BenchmarkSocket implements Runnable {
         
 
        // create threads
-       int threadCnt;
-       if (s_processNum == Integer.MAX_VALUE)
-           threadCnt = s_threadCnt;
-       else
-           threadCnt = 1;
-        for (int n = 0; n < threadCnt; n++) {        
+         for (int n = 0; n < s_threadCnt; n++) {        
             Runnable runable = new BenchmarkSocket (n);               
             s_thread[n] = new Thread (runable);
             s_thread[n].start();
         }        
         
-        if (s_processNum != Integer.MAX_VALUE)
-            protectedSleep(2000);
-        
         // client code      
         s_outputStreamArray = new ObjectOutputStream [s_threadCnt];
-        for (int n = 0; n < threadCnt; n++) {
+        for (int n = 0; n < s_threadCnt; n++) {
             try {                
-                int nextThread;
-                if (s_processNum == Integer.MAX_VALUE)
-                    nextThread = (n + 1) % s_threadCnt;
-                else
-                    nextThread = (s_processNum + 1) % s_threadCnt;
+                int nextThread = (n + 1) % s_threadCnt;
+
                 
                 if (s_verbose)                 
                 System.err.format("\nthread=%d before connect port=%d ", n, s_portNum + nextThread); 
@@ -119,8 +104,6 @@ public class BenchmarkSocket implements Runnable {
         }
 
         // first thread need to start the chain        
-        if (s_processNum != Integer.MAX_VALUE)
-            protectedSleep(2000);
         Frame frame = new Frame(false);
         try {
             s_outputStreamArray[0].writeUnshared (frame);
@@ -147,10 +130,7 @@ public class BenchmarkSocket implements Runnable {
         ObjectInputStream  serverInputStream = null;
         int portNum = -1;
         try {
-            if (s_processNum == Integer.MAX_VALUE)
-                portNum = s_portNum + m_id;
-            else
-                portNum = s_portNum + s_processNum;
+            portNum = s_portNum + m_id;
             if (s_verbose)
                 System.err.format("\nthread=%d before accept port=%d ", m_id, portNum); 
             serverSocket = new ServerSocket (portNum);
@@ -210,7 +190,7 @@ public class BenchmarkSocket implements Runnable {
             frame = new Frame(exit);
         try {
             count ++;
-            assert s_outputStreamArray[m_id] != null : " id=" + m_id + " process=" + s_processNum;
+            assert s_outputStreamArray[m_id] != null : " id=" + m_id;
             s_outputStreamArray[m_id].writeUnshared (frame);
             if ((count & 0xf) == 0)            
             s_outputStreamArray[m_id].reset();
