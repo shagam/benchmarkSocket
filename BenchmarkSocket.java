@@ -155,11 +155,13 @@ public class BenchmarkSocket implements Runnable {
                     sendFrame (null, true);
                     try {
                         s_outputStreamArray[m_id].close();
+                        protectedSleep(20);
+                        serverSocket.close();                        
                     } catch (IOException e) {
                         e.printStackTrace();
                         System.exit(1);
                     }
-                    protectedSleep(20);
+
                     System.exit(0);
                 }
             }
@@ -167,6 +169,10 @@ public class BenchmarkSocket implements Runnable {
             try {
                 Frame frame = (Frame) serverInputStream.readUnshared();
                 if (frame.getExit()) {
+                    sendFrame (null, true);
+                    s_outputStreamArray[m_id].close();                    
+                    protectedSleep(20);
+                    serverSocket.close();
                     String txt = String.format("\nexit, thread=%d port=%d loops=%d  from other\n", m_id, s_portNum, loops);
                     error (txt);           
                     System.exit(0);
@@ -176,7 +182,7 @@ public class BenchmarkSocket implements Runnable {
             }
             catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
-                System.err.format( "\n" + e.getClass().getSimpleName() + " exit thread=%d port=%d loops=%d \n", m_id, s_portNum, loops);
+                System.err.format( "\n" + e.getClass().getSimpleName() + " exit thread=%d port=%d loops=%d   ", m_id, s_portNum, loops);
                 System.exit(1);                
             }                       
         }
@@ -211,7 +217,7 @@ public class BenchmarkSocket implements Runnable {
     }
 
     synchronized void error (String txt) {
-        System.err.format( "\n" + txt);
+        System.err.format(txt);
     }
 }
 

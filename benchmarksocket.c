@@ -111,8 +111,8 @@ void *thread ( void *ptr ) {
     if ((loop & 0xf) == 0) {
       if (getTimeMili () - s_startMili > s_delay) {
           fprintf (stderr, "\nthread=%d loops=%ld  ", id, loop);
-          sockfd_client [id];          
-          sleep(2);
+          close (sockfd_client [id]);          
+          usleep(200);
           close(fd);          
           close(sockfd); 
           exit (0);
@@ -148,6 +148,11 @@ int main(int argc, char * argv[])  {
     if (s_portNum == -1) 
         s_portNum = s_portNum;
     args_report();
+    const char * err = verify (argc, argv);
+    if (err != NULL) {
+        fprintf (stderr, "invalid param=%s  \n", err);
+        exit (3);
+    }    
  
        // create threads
     for (int n = 0; n < s_threadCnt; n++) {
